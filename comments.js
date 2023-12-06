@@ -1,94 +1,69 @@
-// create web server
-// return all comments in database
-// return all comments for a specific post
-// add a new comment
-// delete a comment
-// update a comment
-// return a specific comment
+// Create web server
+// 1. Install express
+// 2. Import express
+// 3. Create an instance of express
+// 4. Create a route
+// 5. Start the server
 
-// import express
-const express = require("express");
-// import router
-const router = express.Router();
-// import Post model
-const Post = require("../models/Post");
-// import Comment model
-const Comment = require("../models/Comment");
+const express = require('express');
+const app = express();
+const port = 3000;
 
-// return all comments in database
-router.get("/", async (req, res) => {
-  try {
-    const comments = await Comment.find();
-    res.json(comments);
-  } catch (err) {
-    res.json({ message: err });
-  }
+app.use(express.json());
+
+let comments = [
+    {
+        id: 1,
+        username: 'Todd',
+        comment: 'lol that is so funny!'
+    },
+    {
+        id: 2,
+        username: 'Skyler',
+        comment: 'I like to go birdwatching with my dog'
+    },
+    {
+        id: 3,
+        username: 'Sk8erBoi',
+        comment: 'Plz delete your account, T
+    },
+    {
+        id: 4,
+        username: 'onlysayswoof',
+        comment: 'woof woof woof'
+    }
+];
+
+app.get('/comments', (req, res) => {
+    res.send(comments);
 });
 
-// return all comments for a specific post
-router.get("/:postId", async (req, res) => {
-  try {
-    const comments = await Comment.find({ post: req.params.postId });
-    res.json(comments);
-  } catch (err) {
-    res.json({ message: err });
-  }
+app.post('/comments', (req, res) => {
+    const { username, comment } = req.body;
+    comments.push({ username, comment });
+    res.send('POSTED');
 });
 
-// add a new comment
-router.post("/", async (req, res) => {
-  const comment = new Comment({
-    content: req.body.content,
-    post: req.body.post,
-  });
-
-  try {
-    const savedComment = await comment.save();
-    res.json(savedComment);
-  } catch (err) {
-    res.json({ message: err });
-  }
+app.get('/comments/:id', (req, res) => {
+    const { id } = req.params;
+    const comment = comments.find(c => c.id === Number(id));
+    res.send(comment);
 });
 
-// delete a comment
-router.delete("/:commentId", async (req, res) => {
-  try {
-    const removedComment = await Comment.remove({
-      _id: req.params.commentId,
-    });
-    res.json(removedComment);
-  } catch (err) {
-    res.json({ message: err });
-  }
+app.patch('/comments/:id', (req, res) => {
+    const { id } = req.params;
+    const newCommentText = req.body.comment;
+    const foundComment = comments.find(c => c.id === Number(id));
+    foundComment.comment = newCommentText;
+    res.send('UPDATED!');
 });
 
-// update a comment
-router.patch("/:commentId", async (req, res) => {
-  try {
-    const updatedComment = await Comment.updateOne(
-      {
-        _id: req.params.commentId,
-      },
-      {
-        $set: {
-          content: req.body.content,
-        },
-      }
-    );
-    res.json(updatedComment);
-  } catch (err) {
-    res.json({ message: err });
-  }
+app.delete('/comments/:id', (req, res) => {
+    const { id } = req.params;
+    comments = comments.filter(c => c.id !== Number(id));
+    res.send('DELETED!');
 });
 
-// return a specific comment
-router.get("/:commentId", async (req, res) => {
-  try {
-    const comment = await Comment.findById(req.params.commentId);
-    res.json(comment);
-  } catch (err) {
-    res.json({ message: err });
-  }
+app.listen(port, () => {
+    console.log(`LISTENING ON PORT ${port}`);
 });
-
-module.exports = router;
